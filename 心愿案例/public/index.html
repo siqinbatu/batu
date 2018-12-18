@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<style type="text/css">
+			*{
+				margin: 0;padding: 0;
+			}
+			#box{
+				width: 600px;
+				height: 300px;
+				margin-top: 10px;
+				border: solid 1px gainsboro;
+				display: flex;
+				flex-flow: row wrap;
+			}
+		</style>
+	</head>
+<body>
+	<input type="text" placeholder="请输入愿望"/>
+	<button id="btn">提交</button>
+	<div id="box">
+		
+	</div>
+	<script src="ajax_v3.js" type="text/javascript" charset="utf-8"></script>
+	<script src="jquery-3.3.1.min.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+	//添加按钮事件
+	$("#btn").on("click",function(){
+		let obj = {
+			xinyuan:$("input").val(),
+			succ:0
+		}
+		ajax.post("http://localhost:8080/add",obj).then(()=>{
+			getMsg()
+		})
+	})
+	//获取随机数函数
+	function suijishu(num){
+		//数组长度为num时，随机下标
+		return parseInt(Math.random()*num);
+	}
+	//随机排序的数组
+	function sjArr(num){
+		let arr=[];
+		let arr1=[];
+		for(let i=0;i<num;i++){
+			arr.push(i);
+		}
+		while(arr.length!=0){
+			arr1.push(arr.splice(suijishu(arr.length),1)[0]);
+		}
+		return arr1.slice(0,8);
+	}
+	console.log(sjArr(8))
+//获取所有愿望,渲染页面
+getMsg()
+function getMsg(){
+	ajax.get("http://localhost:8080/msg").then((res)=>{
+		res = JSON.parse(res)
+		//随机排序
+		let arr=sjArr(res.length);
+		let arr1=[];
+		for(let j=0;j<arr.length;j++){
+			arr1.push(res[arr[j]])
+//			console.log(res[arr[j]])
+		}
+		
+		let str=``;
+		for(let i=0;i<arr1.length;i++){
+			let strTemp='';
+			if(arr1[i].succ=="1"){
+				//愿望若实现变紫色
+				strTemp="background:purple";
+			}
+			str+=`
+				<span style="width:100px;height:80px;text-align:center;margin-top:10px;margin-left:30px">
+					<div><button onclick=del('${arr1[i]._id}') style="width:100%;height:20px">删除</button></div>
+					<div style="width:100%;height:40px">${arr1[i].xinyuan}</div>
+					<div><button onclick=yes('${arr1[i]._id}') style="${strTemp};width:100%;height:20px;padding:2px 6px;">√</button></div>
+				</span>			
+				`;
+		}
+		$("#box").html(str)
+	})
+}
+//删除一条数据
+function del(id){
+	ajax.get("http://localhost:8080/del/"+id).then(()=>{
+		getMsg();
+	})
+}
+		
+//是否实现愿望
+function yes(id){
+	ajax.get("http://localhost:8080/update/"+id).then(()=>{
+		getMsg();
+	})
+}
+	</script>
+	</body>
+</html>
